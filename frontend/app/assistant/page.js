@@ -831,16 +831,7 @@ export default function AssistantPage() {
           </button>
         </div>
  
-        {/* ── Shortcut hint ── */}
-        <div className="shortcut-bar">
-          <span className="shortcut-item"><kbd>N</kbd> New task</span>
-          <span className="shortcut-item"><kbd>B</kbd> Board</span>
-          <span className="shortcut-item"><kbd>W</kbd> Week</span>
-          <span className="shortcut-item"><kbd>A</kbd> Archive</span>
-          <span className="shortcut-item"><kbd>P</kbd> New project</span>
-          <span className="shortcut-item"><kbd>D</kbd> Dark mode</span>
-          <span className="shortcut-item"><kbd>Esc</kbd> Close</span>
-        </div>
+        
  
         {/* ── BOARD VIEW ── */}
         {boardView==="board" && (
