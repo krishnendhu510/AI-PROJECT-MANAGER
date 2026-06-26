@@ -44,6 +44,21 @@ const PRIORITY_META = {
  
 const getDaysInMonth = (year, month) => new Date(year, month + 1, 0).getDate();
 const getFirstDayOfMonth = (year, month) => new Date(year, month, 1).getDay();
+
+/* ─── safe helper to read user name from localStorage ─── */
+const getUserName = () => {
+  try {
+    const raw = localStorage.getItem("aw_user");
+    if (!raw) return "there";
+    const parsed = JSON.parse(raw);
+    if (typeof parsed === "object" && parsed !== null) {
+      return parsed.name || parsed.username || parsed.email || "there";
+    }
+    return raw; // it was stored as a plain string
+  } catch {
+    return localStorage.getItem("aw_user") || "there"; // JSON.parse failed, use raw string
+  }
+};
  
 export default function AssistantPage() {
   const [aiInput, setAiInput]             = useState("");
@@ -55,6 +70,7 @@ export default function AssistantPage() {
   const [loading, setLoading]             = useState(false);
   const [boardView, setBoardView]         = useState("board");
   const [drawerOpen, setDrawerOpen]       = useState(false);
+  const [userName, setUserName]           = useState("there");
  
   /* modals */
   const [showWelcome, setShowWelcome]             = useState(false);
@@ -112,6 +128,7 @@ export default function AssistantPage() {
     fetchProjects();
     const seen = localStorage.getItem("aw_welcomed");
     if (!seen) setShowWelcome(true);
+    setUserName(getUserName());
   }, []);
 
   useEffect(() => {
@@ -441,13 +458,13 @@ export default function AssistantPage() {
   };
 
   /* ── drawer styles (inline, dark-aware) ── */
-  const drawerBg        = darkMode ? "#1e1612" : "#fff8f3";
-  const drawerBorder    = darkMode ? "1px solid #3a2e24" : "1px solid #f0dcc8";
-  const drawerTitleClr  = darkMode ? "#f5ede4" : "#2a1f14";
-  const drawerDivider   = darkMode ? "#3a2e24" : "#f0dcc8";
-  const drawerItemClr   = darkMode ? "#f5ede4" : "#2a1f14";
-  const drawerItemHover = darkMode ? "rgba(226,121,33,.12)" : "rgba(226,121,33,.08)";
-  const kbdBg           = darkMode ? "#2e2218" : "#f0dcc8";
+  const drawerBg         = darkMode ? "#1e1612" : "#fff8f3";
+  const drawerBorder     = darkMode ? "1px solid #3a2e24" : "1px solid #f0dcc8";
+  const drawerTitleClr   = darkMode ? "#f5ede4" : "#2a1f14";
+  const drawerDivider    = darkMode ? "#3a2e24" : "#f0dcc8";
+  const drawerItemClr    = darkMode ? "#f5ede4" : "#2a1f14";
+  const drawerItemHover  = darkMode ? "rgba(226,121,33,.12)" : "rgba(226,121,33,.08)";
+  const kbdBg            = darkMode ? "#2e2218" : "#f0dcc8";
   const shortcutLabelClr = darkMode ? "#d4bfaa" : "#5a4a3a";
  
   return (
@@ -714,15 +731,10 @@ export default function AssistantPage() {
  
       <div className={`page ${darkMode ? "dark" : ""}`}>
         {/* ── Header ── */}
-        {/* ── Header ── */}
         <div className="header-row">
           <div>
             <p style={{ fontSize:13, color:"#9197AA", fontWeight:500, marginBottom:2 }}>
-              👋 Hi, <strong style={{ color:"#E27921" }}>
-                {typeof window !== "undefined" && localStorage.getItem("aw_user")
-                  ? JSON.parse(localStorage.getItem("aw_user")).name || localStorage.getItem("aw_user")
-                  : "there"}
-              </strong>
+              👋 Hi, <strong style={{ color:"#E27921" }}>{userName}</strong>
             </p>
             <h1 className="page-title">Work Organizer</h1>
             <p className="page-sub">AI-powered task management</p>
@@ -838,8 +850,6 @@ export default function AssistantPage() {
             🗃 Archive <span className="view-tab-badge">{archivedTasks.length}</span>
           </button>
         </div>
- 
-        
  
         {/* ── BOARD VIEW ── */}
         {boardView==="board" && (
