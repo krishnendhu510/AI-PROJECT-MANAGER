@@ -54,6 +54,7 @@ export default function AssistantPage() {
   const [isListening, setIsListening]     = useState(false);
   const [loading, setLoading]             = useState(false);
   const [boardView, setBoardView]         = useState("board");
+  const [drawerOpen, setDrawerOpen]       = useState(false);
  
   /* modals */
   const [showWelcome, setShowWelcome]             = useState(false);
@@ -139,21 +140,21 @@ export default function AssistantPage() {
 
   /* ── export CSV ── */
   const exportCSV = async () => {
-  try {
-    const res = await api.get("/tasks/export", { responseType: "blob" });
-    const url = URL.createObjectURL(new Blob([res.data]));
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute("download", "tasks.csv");
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-  } catch (e) {
-    console.log(e);
-    showReminder("❌ Export failed. Try again.");
-  }
-};
+    try {
+      const res = await api.get("/tasks/export", { responseType: "blob" });
+      const url = URL.createObjectURL(new Blob([res.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      link.setAttribute("download", "tasks.csv");
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      console.log(e);
+      showReminder("❌ Export failed. Try again.");
+    }
+  };
  
   /* ── keyboard shortcuts ── */
   useEffect(() => {
@@ -172,6 +173,7 @@ export default function AssistantPage() {
         setShowCalendar(false);
         setShowProjectPicker(false);
         setDeadlineCalendarOpen(false);
+        setDrawerOpen(false);
       }
     };
     window.addEventListener("keydown", handler);
@@ -437,6 +439,16 @@ export default function AssistantPage() {
       </div>
     );
   };
+
+  /* ── drawer styles (inline, dark-aware) ── */
+  const drawerBg        = darkMode ? "#1e1612" : "#fff8f3";
+  const drawerBorder    = darkMode ? "1px solid #3a2e24" : "1px solid #f0dcc8";
+  const drawerTitleClr  = darkMode ? "#f5ede4" : "#2a1f14";
+  const drawerDivider   = darkMode ? "#3a2e24" : "#f0dcc8";
+  const drawerItemClr   = darkMode ? "#f5ede4" : "#2a1f14";
+  const drawerItemHover = darkMode ? "rgba(226,121,33,.12)" : "rgba(226,121,33,.08)";
+  const kbdBg           = darkMode ? "#2e2218" : "#f0dcc8";
+  const shortcutLabelClr = darkMode ? "#d4bfaa" : "#5a4a3a";
  
   return (
     <div className={darkMode ? "dark-root" : "light-root"}>
@@ -590,6 +602,112 @@ export default function AssistantPage() {
           </div>
         </div>
       )}
+
+      {/* ── Drawer Backdrop ── */}
+      {drawerOpen && (
+        <div
+          onClick={() => setDrawerOpen(false)}
+          style={{
+            position:"fixed", inset:0, zIndex:1000,
+            background:"rgba(0,0,0,0.35)",
+            backdropFilter:"blur(2px)",
+          }}
+        />
+      )}
+
+      {/* ── Side Drawer ── */}
+      <div style={{
+        position:"fixed", top:0, right:0, bottom:0, zIndex:1001,
+        width:300, maxWidth:"85vw",
+        background: drawerBg,
+        borderLeft: drawerBorder,
+        boxShadow:"-8px 0 32px rgba(0,0,0,0.15)",
+        transform: drawerOpen ? "translateX(0)" : "translateX(100%)",
+        transition:"transform 0.28s cubic-bezier(.4,0,.2,1)",
+        display:"flex", flexDirection:"column",
+        padding:"28px 24px",
+        gap:6,
+        overflowY:"auto",
+      }}>
+        {/* Drawer Header */}
+        <div style={{display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:20}}>
+          <span style={{fontFamily:"'Syne',sans-serif", fontWeight:700, fontSize:17, color:drawerTitleClr}}>
+            Menu
+          </span>
+          <button
+            onClick={() => setDrawerOpen(false)}
+            style={{background:"none", border:"none", fontSize:22, cursor:"pointer", color:"#9197AA", lineHeight:1, padding:4}}
+          >✕</button>
+        </div>
+
+        {/* Dark mode */}
+        <DrawerItem
+          icon={darkMode ? "☀️" : "🌙"}
+          label={darkMode ? "Light mode" : "Dark mode"}
+          onClick={toggleDark}
+          color={drawerItemClr}
+          hoverBg={drawerItemHover}
+        />
+
+        {/* Export CSV */}
+        <DrawerItem
+          icon="⬇"
+          label="Export CSV"
+          onClick={() => { exportCSV(); setDrawerOpen(false); }}
+          color={drawerItemClr}
+          hoverBg={drawerItemHover}
+        />
+
+        {/* Divider */}
+        <div style={{height:1, background:drawerDivider, margin:"10px 0"}}/>
+
+        {/* Shortcuts section */}
+        <p style={{
+          fontSize:11, fontWeight:700, textTransform:"uppercase",
+          letterSpacing:".08em", color:"#9197AA", margin:"0 0 8px 4px",
+        }}>
+          Keyboard Shortcuts
+        </p>
+        {[
+          ["N","New task"],
+          ["B","Board"],
+          ["W","Week"],
+          ["A","Archive"],
+          ["P","New project"],
+          ["D","Dark mode"],
+          ["Esc","Close"],
+        ].map(([key, label]) => (
+          <div key={key} style={{
+            display:"flex", justifyContent:"space-between", alignItems:"center",
+            padding:"5px 4px",
+          }}>
+            <span style={{fontSize:13, color:shortcutLabelClr}}>{label}</span>
+            <kbd style={{
+              fontSize:11, fontWeight:700, padding:"2px 8px", borderRadius:6,
+              background:kbdBg, color:"#E27921",
+              border:"1px solid #E27921",
+              fontFamily:"monospace",
+            }}>{key}</kbd>
+          </div>
+        ))}
+
+        {/* Divider */}
+        <div style={{height:1, background:drawerDivider, margin:"10px 0"}}/>
+
+        {/* Sign out */}
+        <DrawerItem
+          icon="🚪"
+          label="Sign out"
+          onClick={() => {
+            localStorage.removeItem("aw_token");
+            localStorage.removeItem("aw_user");
+            localStorage.removeItem("aw_welcomed");
+            router.push("/login");
+          }}
+          color="#C1521E"
+          hoverBg="rgba(193,82,30,.08)"
+        />
+      </div>
  
       {/* ── Toast ── */}
       {reminder && <div className="reminder-toast">{reminder.message}</div>}
@@ -600,14 +718,6 @@ export default function AssistantPage() {
           <div>
             <h1 className="page-title">Work Organizer</h1>
             <p className="page-sub">AI-powered task management</p>
-            <button className="logout-btn" onClick={() => {
-              localStorage.removeItem("aw_token");
-              localStorage.removeItem("aw_user");
-              localStorage.removeItem("aw_welcomed");
-              router.push("/login");
-            }}>
-              Sign out
-            </button>
           </div>
           <div style={{display:"flex",alignItems:"center",gap:12,flexWrap:"wrap"}}>
             <div className="search-wrap" ref={searchRef}>
@@ -642,12 +752,6 @@ export default function AssistantPage() {
             <button className="new-project-btn" onClick={()=>setShowNewProject(true)}>
               <span style={{fontSize:18,lineHeight:1}}>+</span> New Project
             </button>
-            <button className="new-project-btn" onClick={exportCSV}>
-              ⬇ Export CSV
-            </button>
-            <button className="dark-toggle" onClick={toggleDark} title="Toggle dark mode (D)">
-              {darkMode ? "☀️" : "🌙"}
-            </button>
             <div className="stats-row">
               <div className="stat-pill stat-total">{activeTasks.length} Total</div>
               <div className="stat-pill stat-pending">{pending.length} Pending</div>
@@ -655,6 +759,33 @@ export default function AssistantPage() {
               <div className="stat-pill stat-done">{completed.length} Done</div>
               {archivedTasks.length > 0 && <div className="stat-pill stat-archived">{archivedTasks.length} Archived</div>}
             </div>
+            {/* ── Hamburger ── */}
+            <button
+              onClick={() => setDrawerOpen(true)}
+              aria-label="Open menu"
+              title="Menu"
+              style={{
+                display:"flex", flexDirection:"column", justifyContent:"center",
+                alignItems:"center", gap:5,
+                width:40, height:40,
+                background:"none",
+                border: darkMode ? "1.5px solid #3a2e24" : "1.5px solid #e0d0c0",
+                borderRadius:10,
+                cursor:"pointer",
+                padding:"10px 9px",
+                flexShrink:0,
+                transition:"background 0.15s",
+              }}
+              onMouseEnter={e => e.currentTarget.style.background = "rgba(226,121,33,.08)"}
+              onMouseLeave={e => e.currentTarget.style.background = "none"}
+            >
+              {[0,1,2].map(i => (
+                <span key={i} style={{
+                  display:"block", width:18, height:2,
+                  background:"#E27921", borderRadius:2,
+                }}/>
+              ))}
+            </button>
           </div>
         </div>
  
@@ -835,6 +966,33 @@ export default function AssistantPage() {
         )}
       </div>
     </div>
+  );
+}
+
+/* ─── DrawerItem helper ─── */
+function DrawerItem({ icon, label, onClick, color, hoverBg }) {
+  const [hovered, setHovered] = useState(false);
+  return (
+    <button
+      onClick={onClick}
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+      style={{
+        display:"flex", alignItems:"center", gap:12,
+        width:"100%", padding:"11px 12px",
+        background: hovered ? hoverBg : "none",
+        border: "1.5px solid transparent",
+        borderColor: hovered ? "rgba(226,121,33,.2)" : "transparent",
+        borderRadius:10,
+        fontFamily:"'DM Sans',sans-serif", fontSize:14, fontWeight:600,
+        color: color,
+        cursor:"pointer", textAlign:"left",
+        transition:"background 0.13s, border-color 0.13s",
+      }}
+    >
+      <span style={{fontSize:16}}>{icon}</span>
+      <span>{label}</span>
+    </button>
   );
 }
  
