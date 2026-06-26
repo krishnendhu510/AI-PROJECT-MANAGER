@@ -714,8 +714,16 @@ export default function AssistantPage() {
  
       <div className={`page ${darkMode ? "dark" : ""}`}>
         {/* ── Header ── */}
+        {/* ── Header ── */}
         <div className="header-row">
           <div>
+            <p style={{ fontSize:13, color:"#9197AA", fontWeight:500, marginBottom:2 }}>
+              👋 Hi, <strong style={{ color:"#E27921" }}>
+                {typeof window !== "undefined" && localStorage.getItem("aw_user")
+                  ? JSON.parse(localStorage.getItem("aw_user")).name || localStorage.getItem("aw_user")
+                  : "there"}
+              </strong>
+            </p>
             <h1 className="page-title">Work Organizer</h1>
             <p className="page-sub">AI-powered task management</p>
           </div>
